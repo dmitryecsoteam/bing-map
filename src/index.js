@@ -26,15 +26,17 @@ const run = async () => {
         for (let originIndex = 1; originIndex <= originID.origin; originIndex++) {
             const origin = await Origin.findById(originIndex).select({ _id: 1, latitude: 1, longitude: 1 });
 
+            // If origin with such ID exists
             if (origin) {
                 for (let destIndex = 1; destIndex <= destID.destination; destIndex++) {
                     const destination = await Destination.findById(destIndex).select({ _id: 1, latitude: 1, longitude: 1 });
 
+                    // If destination with such ID exists
                     if (destination) {
                         const existsWithoutCar = await Travel.existsWithoutCar(origin._id, destination._id);
 
-                        //console.log(existsWithoutCar, origin._id, destination._id);
-
+                        // If exist at least one record without carDistance or carDuration for these origin and destination,
+                        // Make request to API and update travels in DB
                         if (existsWithoutCar) {
 
                             const url = generateURL(origin.latitude, origin.longitude, destination.latitude, destination.longitude);
@@ -50,15 +52,10 @@ const run = async () => {
                             await Travel.updateMany({ origin: originIndex, destination: destIndex }, { $set: { carDistance, carDuration } });
 
                         }
-
-
                     }
                 }
             }
         }
-
-
-
 
     } catch (e) {
         console.log(e);

@@ -17,12 +17,8 @@ TravelSchema.statics.findMaxDestination = function findMaxDestination() {
     return this.findOne().select({ destination: 1 }).sort({ destination: -1 });
 }
 
-TravelSchema.statics.findRandomTravel = function findRandomTravel(origin, destination) {
-    return this.findOne({ origin, destination });
-}
-
 TravelSchema.statics.existsWithoutCar = function existsWithoutCar(origin, destination) {
     return this.findOne({ origin, destination, $or: [{ carDistance: null }, { carDuration: null }] }).select({ _id: 1 });
 }
 
-module.exports = mongoose.model('Travel', TravelSchema, 'travelsTest');
+module.exports = mongoose.model('Travel', TravelSchema, 'travels');
