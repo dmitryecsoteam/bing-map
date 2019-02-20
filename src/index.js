@@ -11,50 +11,60 @@ const generateURL = (originLat, originLong, destLat, destLong) => {
 
 
 const run = async () => {
-    // Connect to mongo DB
-    await mongo.connect();
 
-    // Find max origin ID
-    const originID = await Travel.findMaxOrigin();
+    try {
+        // Connect to mongo DB
+        await mongo.connect();
 
-    // Find max destination ID
-    const destID = await Travel.findMaxDestination();
+        // Find max origin ID
+        const originID = await Travel.findMaxOrigin();
+
+        // Find max destination ID
+        const destID = await Travel.findMaxDestination();
 
 
-    for (let originIndex = 1; originIndex <= originID.origin; originIndex++) {
-        const origin = await Origin.findById(originIndex);
+        for (let originIndex = 1; originIndex <= originID.origin; originIndex++) {
+            const origin = await Origin.findById(originIndex).select({ _id: 1, latitude: 1, longitude: 1 });
 
-        for (let destIndex = 1; destIndex <= destID.destination; destIndex++) {
-            const destination = await Destination.findById(destIndex);
+            if (origin) {
+                for (let destIndex = 1; destIndex <= destID.destination; destIndex++) {
+                    const destination = await Destination.findById(destIndex).select({ _id: 1, latitude: 1, longitude: 1 });
 
-            // Find any travel for specific origin and destination
-            // If carDistance is undefined then send request to bing map API and save new data
-            const { carDistance } = await Travel.findRandomTravel(originIndex, destIndex);
-            if (carDistance === undefined) {
+                    if (destination) {
+                        const existsWithoutCar = await Travel.existsWithoutCar(origin._id, destination._id);
 
-                const url = generateURL(origin.latitude, origin.longitude, destination.latitude, destination.longitude);
+                        //console.log(existsWithoutCar, origin._id, destination._id);
 
-                console.log('OriginID: ', originIndex);
-                console.log('DestinationID: ', destIndex);
-                console.log('URL: ', url);
+                        if (existsWithoutCar) {
 
-                const response = await axios.get(url);
-                const carDistance = response.data.resourceSets[0].resources[0].results[0].travelDistance;
-                const carDuration = response.data.resourceSets[0].resources[0].results[0].travelDuration;
+                            const url = generateURL(origin.latitude, origin.longitude, destination.latitude, destination.longitude);
 
-                await Travel.updateMany({ origin: originIndex, destination: destIndex }, { $set: { carDistance, carDuration } });
+                            console.log('OriginID: ', originIndex);
+                            console.log('DestinationID: ', destIndex);
+                            console.log('URL: ', url);
 
+                            const response = await axios.get(url);
+                            const carDistance = response.data.resourceSets[0].resources[0].results[0].travelDistance;
+                            const carDuration = response.data.resourceSets[0].resources[0].results[0].travelDuration;
+
+                            await Travel.updateMany({ origin: originIndex, destination: destIndex }, { $set: { carDistance, carDuration } });
+
+                        }
+
+
+                    }
+                }
             }
-            
-
         }
+
+
+
+
+    } catch (e) {
+        console.log(e);
+    } finally {
+        await mongo.close();
     }
-
-
-
-
-
-    await mongo.close();
 };
 
-run().catch(error => console.error(error.stack));
+run();
