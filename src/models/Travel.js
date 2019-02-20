@@ -5,8 +5,10 @@ const TravelSchema = new Schema({
     origin: Number,
     destination: Number,
     date: String,
-    carDistance: { type: Number, set: (v) => { return Math.round(v)}},
-    carDuration: { type: Number, set: (v) => { return Math.round(v)}}
+    carDistance: Number,
+    carDuration: Number
+    //carDistance: { type: Number, set: (v) => { return Math.round(v)}},
+    //carDuration: { type: Number, set: (v) => { return Math.round(v)}}
 });
 
 TravelSchema.statics.findMaxOrigin = function findMaxOrigin() {
