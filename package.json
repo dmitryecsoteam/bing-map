@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "axios": "^0.18.0",
-    "mongoose": "^5.3.12"
+    "mongoose": "^5.7.5"
   },
   "devDependencies": {
     "dotenv": "^6.1.0",
